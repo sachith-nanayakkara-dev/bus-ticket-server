@@ -1,17 +1,10 @@
 plugins {
     id 'java'
     id 'war'
-    id 'application'
 }
 
 group = 'org.sachith'
-version = '1.0'
-
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
-    }
-}
+version = '1.0.2'
 
 repositories {
     mavenCentral()
@@ -19,35 +12,19 @@ repositories {
 
 dependencies {
 
-    // Embedded Tomcat
-    implementation 'org.apache.tomcat.embed:tomcat-embed-core:10.1.18'
-    implementation 'org.apache.tomcat.embed:tomcat-embed-jasper:10.1.18'
-
-    // Servlet API (required for HttpServlet)
+    // Tomcat provides servlet runtime in external deployment
     compileOnly 'jakarta.servlet:jakarta.servlet-api:6.0.0'
 
-    // JSON serialization
+    // JSON + logging packaged into WAR
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.17.0'
+    implementation 'org.slf4j:slf4j-api:2.0.13'
+    implementation 'ch.qos.logback:logback-classic:1.5.6'
 
-    // Logging
-    implementation 'org.slf4j:slf4j-api:2.0.12'
-    implementation 'org.slf4j:slf4j-simple:2.0.12'
-
-    // Unit testing
-    testImplementation platform('org.junit:junit-bom:5.10.0')
-    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
 }
 
-application {
-    mainClass = 'org.sachith.server.TomcatServer'
-}
-
-jar {
-    manifest {
-        attributes(
-                'Main-Class': 'org.sachith.server.TomcatServer'
-        )
-    }
+war {
+    archiveFileName = 'bus-ticket-server.war'
 }
 
 test {

@@ -4,6 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.sachith.controller.AvailabilityController;
+import org.sachith.controller.ReservationController;
+import org.sachith.controller.SeatGridMapController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,39 +21,80 @@ public class DispatcherServlet extends HttpServlet {
     private final ObjectMapper mapper = new ObjectMapper();
     private final Map<RouteKey, Controller> routes = new ConcurrentHashMap<>();
 
-    public DispatcherServlet(Map<RouteKey, Controller> initialRoutes) {
-        this.routes.putAll(initialRoutes);
+    public DispatcherServlet() {
     }
 
     @Override
-    protected void service(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+    protected void service(HttpServletRequest req,
+                           HttpServletResponse resp)
+            throws IOException {
 
-        String path = req.getRequestURI();
-        String method = req.getMethod().toUpperCase();
-        RouteKey key = RouteKey.of(method, path);
+        String rawPath = req.getRequestURI();
 
-        Controller controller = routes.get(key);
+        String path =
+                rawPath.substring(req.getContextPath().length());
+
+        if (path == null || path.isEmpty()) {
+            path = "/";
+        }
+
+        if (path.length() > 1 && path.endsWith("/")) {
+            path = path.substring(0, path.length() - 1);
+        }
+
+        final String normalizedPath = path;
+
+        String method =
+                req.getMethod().toUpperCase();
+
+        RouteKey key =
+                RouteKey.of(method, normalizedPath);
+
+        Controller controller =
+                routes.get(key);
 
         if (controller == null) {
-            // If path exists for other method -> 405; else 404
-            boolean pathExists = routes.keySet().stream().anyMatch(k -> k.toString().endsWith(" " + path));
+
+            boolean pathExists =
+                    routes.keySet()
+                            .stream()
+                            .anyMatch(k ->
+                                    k.getPath()
+                                            .equals(normalizedPath)
+                            );
+
             resp.setStatus(pathExists ? 405 : 404);
+
             resp.setContentType("application/json");
-            mapper.writeValue(resp.getOutputStream(),
-                    Map.of("errorCode", pathExists ? "METHOD_NOT_ALLOWED" : "NOT_FOUND",
-                            "message", pathExists ? "Method not allowed for " + path : "No route for " + method + " " + path));
+
+            mapper.writeValue(
+                    resp.getOutputStream(),
+                    Map.of(
+                            "errorCode",
+                            pathExists ?
+                                    "METHOD_NOT_ALLOWED"
+                                    : "NOT_FOUND",
+                            "message",
+                            pathExists ?
+                                    "Method not allowed for " + normalizedPath
+                                    : "No route for " + method + " " + normalizedPath
+                    )
+            );
+
             return;
         }
 
         try {
-            log.info("Dispatching {} {}", method, path);
             controller.handle(req, resp);
         } catch (Exception ex) {
-            // IMPORTANT:
-            // Your ExceptionHandlingFilter should catch exceptions thrown downstream of chain.doFilter().
-            // But since we're in the servlet, if you prefer filter-only handling, rethrow as RuntimeException.
-            // This ensures your global filter handles it consistently.
             throw new RuntimeException(ex);
         }
+    }
+
+    @Override
+    public void init() {
+        routes.put(RouteKey.of("POST", "/availability"), new AvailabilityController());
+        routes.put(RouteKey.of("POST", "/reserve"), new ReservationController());
+        routes.put(RouteKey.of("GET", "/seat-map/grid"), new SeatGridMapController());
     }
 }

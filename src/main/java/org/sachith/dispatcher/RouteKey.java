@@ -16,6 +16,14 @@ public class RouteKey {
         return new RouteKey(method.toUpperCase(), path);
     }
 
+    public String getMethod() {
+        return method;
+    }
+
+    public String getPath() {
+        return path;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
