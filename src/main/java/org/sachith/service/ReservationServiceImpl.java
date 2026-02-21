@@ -22,8 +22,8 @@ public class ReservationServiceImpl implements ReservationService {
     private final ReservationRepository reservationRepository =
             new ReservationRepositoryImpl();
 
-    private final ScheduleService scheduleService =
-            new ScheduleService();
+    private final ScheduleServiceImpl scheduleServiceImpl =
+            new ScheduleServiceImpl();
 
     private final TripRepository tripRepository = new TripRepositoryImpl();
 
@@ -42,7 +42,7 @@ public class ReservationServiceImpl implements ReservationService {
         int destinationIndex = index(destination);
 
         boolean isForward =
-                index(origin) < index(destination);
+                originIndex < destinationIndex;
 
         int start = Math.min(originIndex, destinationIndex);
         int end = Math.max(originIndex, destinationIndex);
@@ -61,10 +61,8 @@ public class ReservationServiceImpl implements ReservationService {
 
         List<String> bookedSeats = new ArrayList<>();
 
-        boolean forward = originIndex < destinationIndex;
-
         Trip trip =
-                tripRepository.findOrCreate(travelDate, forward);
+                tripRepository.findOrCreate(travelDate, isForward);
 
         for (Seat seat : trip.getSeats()) {
 
@@ -105,7 +103,7 @@ public class ReservationServiceImpl implements ReservationService {
         log.info("Reservation successful: reservationId={}, seats={}",
                 reservationId, bookedSeats);
         JourneyInfo journeyInfo =
-                scheduleService.calculateJourney(origin, destination);
+                scheduleServiceImpl.calculateJourney(origin, destination);
 
         return new ReservationResponse(
                 reservationId,

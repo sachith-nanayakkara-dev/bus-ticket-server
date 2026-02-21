@@ -10,6 +10,9 @@ import org.sachith.service.ReservationService;
 import org.sachith.service.ReservationServiceImpl;
 import org.sachith.validator.ReservationValidator;
 
+/**
+ * Controller for handling seat reservation requests.
+ */
 public class ReservationController implements Controller {
 
     private final ReservationService service = new ReservationServiceImpl();
@@ -18,13 +21,12 @@ public class ReservationController implements Controller {
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response) throws Exception {
 
-        ReservationRequest req =
-                mapper.readValue(request.getInputStream(), ReservationRequest.class);
+        ReservationRequest req = mapper.readValue(request.getInputStream(), ReservationRequest.class);
 
         ReservationValidator.validate(req);
 
-        ReservationResponse res =
-                service.reserve(req.getOrigin(), req.getDestination(), req.getPassengers(), req.getPaymentAmount(), req.getTravelDate());
+        ReservationResponse res = service.reserve(req.getOrigin(), req.getDestination(), req.getPassengers(),
+                req.getPaymentAmount(), req.getTravelDate());
 
         response.setContentType("application/json");
         mapper.writeValue(response.getOutputStream(), res);

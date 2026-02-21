@@ -10,6 +10,13 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
+/**
+ * Servlet filter for global exception handling.
+ * Catches exceptions during request processing and returns JSON error
+ * responses.
+ * Handles BusinessException and unexpected errors with appropriate status
+ * codes.
+ */
 public class ExceptionHandlingFilter implements Filter {
 
         private static final Logger log = LoggerFactory.getLogger(ExceptionHandlingFilter.class);
@@ -28,11 +35,13 @@ public class ExceptionHandlingFilter implements Filter {
                 try {
                         chain.doFilter(request, response);
                 } catch (Exception ex) {
-                        // Unwrap cause chain to check for BusinessException (including InvalidPaymentException)
+                        // Unwrap cause chain to check for BusinessException (including
+                        // InvalidPaymentException)
                         Throwable cause = ex;
                         while (cause != null) {
                                 if (cause instanceof BusinessException bex) {
-                                        log.warn("Unwrapped BusinessException: {} | Type: {}", bex.getMessage(), bex.getClass().getName(), bex);
+                                        log.warn("Unwrapped BusinessException: {} | Type: {}", bex.getMessage(),
+                                                        bex.getClass().getName(), bex);
                                         httpResponse.setStatus(400);
                                         httpResponse.setContentType("application/json");
                                         ErrorResponse error = new ErrorResponse(bex.getErrorCode(), bex.getMessage());

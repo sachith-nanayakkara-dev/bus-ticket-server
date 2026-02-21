@@ -2,6 +2,10 @@ package org.sachith.dispatcher;
 
 import java.util.Objects;
 
+/**
+ * Composite key for routing based on HTTP method and path.
+ * Used to uniquely identify routes in the dispatcher.
+ */
 public class RouteKey {
 
     private final String method;
@@ -26,8 +30,10 @@ public class RouteKey {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof RouteKey)) return false;
+        if (this == o)
+            return true;
+        if (!(o instanceof RouteKey))
+            return false;
         RouteKey routeKey = (RouteKey) o;
         return Objects.equals(method, routeKey.method) && Objects.equals(path, routeKey.path);
     }

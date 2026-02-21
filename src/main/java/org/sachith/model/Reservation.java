@@ -2,6 +2,10 @@ package org.sachith.model;
 
 import java.util.List;
 
+/**
+ * Model representing a bus ticket reservation.
+ * Contains reservation ID, origin, destination, seat list, and total price.
+ */
 public class Reservation {
 
     private String reservationId;

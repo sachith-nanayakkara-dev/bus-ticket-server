@@ -1,6 +1,5 @@
 package org.sachith.service;
 
-import org.sachith.datastore.DataStore;
 import org.sachith.dto.AvailabilityResponse;
 import org.sachith.model.Seat;
 import org.sachith.model.Trip;

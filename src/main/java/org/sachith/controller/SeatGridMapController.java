@@ -12,6 +12,12 @@ public class SeatGridMapController implements Controller {
 
     private final SeatGridQueryService service = new SeatGridQueryServiceImpl();
     private final ObjectMapper mapper = new ObjectMapper();
+    
+    /**
+     * Controller for handling seat grid map queries.
+     * Accepts origin, destination, and travelDate parameters,
+     * validates input, and returns seat map information as JSON.
+     */
 
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response) throws Exception {

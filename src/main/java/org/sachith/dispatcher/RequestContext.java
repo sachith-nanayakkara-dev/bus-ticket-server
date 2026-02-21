@@ -6,6 +6,11 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 
+/**
+ * Wrapper for HTTP request and response handling.
+ * Provides utility methods for reading request body,
+ * writing JSON responses, and accessing request parameters.
+ */
 public class RequestContext {
 
     private final ObjectMapper mapper;

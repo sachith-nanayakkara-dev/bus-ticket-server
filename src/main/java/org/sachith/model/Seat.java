@@ -1,6 +1,9 @@
 package org.sachith.model;
 
-
+/**
+ * Model for a bus seat with segment-based reservation logic.
+ * Tracks availability for forward and return segments and allows reservation.
+ */
 public class Seat {
 
     private final String seatNumber;
@@ -18,12 +21,12 @@ public class Seat {
             int end,
             boolean isForward) {
 
-        boolean[] segments =
-                isForward ? forwardSegments : returnSegments;
+        boolean[] segments = isForward ? forwardSegments : returnSegments;
 
         for (int i = start; i < end; i++) {
 
-            if (segments[i]) return false;
+            if (segments[i])
+                return false;
         }
 
         return true;
@@ -34,8 +37,7 @@ public class Seat {
             int end,
             boolean isForward) {
 
-        boolean[] segments =
-                isForward ? forwardSegments : returnSegments;
+        boolean[] segments = isForward ? forwardSegments : returnSegments;
 
         for (int i = start; i < end; i++) {
 
@@ -47,5 +49,3 @@ public class Seat {
         return seatNumber;
     }
 }
-
-

@@ -5,6 +5,10 @@ import org.sachith.controller.*;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Central registry for mapping RouteKey to Controller instances.
+ * Defines available routes and their corresponding handlers.
+ */
 public class RouteRegistry {
 
     public static Map<RouteKey, Controller> routes() {

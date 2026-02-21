@@ -2,9 +2,13 @@ package org.sachith.model;
 
 import java.util.List;
 
+/**
+ * Model for a bus trip.
+ * Contains trip ID, travel date, direction (forward/return), and seat list.
+ */
 public class Trip {
 
-    //todo:check this
+    // todo:check
     private String tripId;
     private String travelDate;
     private boolean forward;
