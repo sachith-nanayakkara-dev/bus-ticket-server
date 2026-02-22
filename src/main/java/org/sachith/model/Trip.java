@@ -8,7 +8,6 @@ import java.util.List;
  */
 public class Trip {
 
-    // todo:check
     private String tripId;
     private String travelDate;
     private boolean forward;

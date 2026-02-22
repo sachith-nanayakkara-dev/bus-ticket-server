@@ -17,7 +17,6 @@ public class TripRepositoryImpl implements TripRepository {
 
         String key = date + "_" + (forward ? "F" : "R");
 
-        //todo: check
         return trips.computeIfAbsent(key, k -> {
 
             List<Seat> seats = new ArrayList<>();

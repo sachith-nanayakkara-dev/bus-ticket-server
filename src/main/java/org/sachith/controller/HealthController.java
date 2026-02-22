@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.sachith.dispatcher.Controller;
+import org.sachith.dispatcher.RequestContext;
 
 import java.io.IOException;
 import java.util.Map;
@@ -13,20 +14,13 @@ import java.util.Map;
  */
 public class HealthController implements Controller {
 
-    private static final ObjectMapper mapper =
-            new ObjectMapper();
+        private static final ObjectMapper mapper = new ObjectMapper();
 
-    @Override
-    public void handle(
-            HttpServletRequest request,
-            HttpServletResponse response) throws IOException {
-
-        response.setStatus(HttpServletResponse.SC_OK);
-        response.setContentType("application/json");
-
-        mapper.writeValue(
-                response.getOutputStream(),
-                Map.of("status", "UP")
-        );
-    }
+        @Override
+        public void handle(
+                        HttpServletRequest request,
+                        HttpServletResponse response) throws IOException {
+                RequestContext ctx = new RequestContext(mapper, request, response);
+                ctx.writeJson(HttpServletResponse.SC_OK, Map.of("status", "UP"));
+        }
 }

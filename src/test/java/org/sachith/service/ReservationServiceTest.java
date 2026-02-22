@@ -1,3 +1,4 @@
+
 package org.sachith.service;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -16,7 +17,6 @@ import static org.junit.jupiter.api.Assertions.*;
 public class ReservationServiceTest {
 
     private ReservationService reservationService;
-    private AvailabilityService availabilityService;
 
     @BeforeEach
     void setup() {
@@ -26,9 +26,6 @@ public class ReservationServiceTest {
 
         reservationService =
                 new ReservationServiceImpl();
-
-        availabilityService =
-                new AvailabilityServiceImpl();
     }
 
     /**
@@ -228,5 +225,30 @@ public class ReservationServiceTest {
         // So max successful requests = 20
 
         assertTrue(successCount <= 20);
+    }
+
+    /**
+     * Test that booking A-C and then C-D returns the same seat for both reservations.
+     */
+    @Test
+    void shouldReturnSameSeatForNonOverlappingSegments() {
+        // Book A-C (segments 0,1)
+        ReservationResponse first = reservationService.reserve(
+                "A", "C", 1, 100, "2026-03-20"
+        );
+        assertNotNull(first);
+        assertEquals(1, first.getSeats().size());
+        String seat = first.getSeats().get(0);
+
+        // Book C-D (segment 2)
+        ReservationResponse second = reservationService.reserve(
+                "C", "D", 1, 50, "2026-03-20"
+        );
+        assertNotNull(second);
+        assertEquals(1, second.getSeats().size());
+        String seat2 = second.getSeats().get(0);
+
+        // Should be the same seat
+        assertEquals(seat, seat2);
     }
 }

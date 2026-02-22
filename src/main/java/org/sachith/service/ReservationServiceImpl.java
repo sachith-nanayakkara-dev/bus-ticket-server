@@ -44,10 +44,14 @@ public class ReservationServiceImpl implements ReservationService {
         boolean isForward =
                 originIndex < destinationIndex;
 
+        // 'start' is the lower index of the two locations (inclusive), marking the
+        // beginning segment of the journey.
         int start = Math.min(originIndex, destinationIndex);
+        // 'end' is the higher index of the two locations (exclusive), marking the
+        // segment just after the journey ends.
         int end = Math.max(originIndex, destinationIndex);
 
-
+        // calculate price per seat & expected total
         int pricePerSeat = (end - start) * 50;
         int expectedTotal = pricePerSeat * passengers;
 

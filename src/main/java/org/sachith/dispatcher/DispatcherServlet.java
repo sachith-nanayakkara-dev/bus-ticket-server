@@ -4,10 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.sachith.controller.AvailabilityController;
-import org.sachith.controller.HealthController;
-import org.sachith.controller.ReservationController;
-import org.sachith.controller.SeatGridMapController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
