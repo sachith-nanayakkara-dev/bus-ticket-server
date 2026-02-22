@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.sachith.controller.AvailabilityController;
+import org.sachith.controller.HealthController;
 import org.sachith.controller.ReservationController;
 import org.sachith.controller.SeatGridMapController;
 import org.slf4j.Logger;
@@ -94,8 +95,6 @@ public class DispatcherServlet extends HttpServlet {
          */
         @Override
         public void init() {
-                routes.put(RouteKey.of("POST", "/availability"), new AvailabilityController());
-                routes.put(RouteKey.of("POST", "/reserve"), new ReservationController());
-                routes.put(RouteKey.of("GET", "/seat-map/grid"), new SeatGridMapController());
+                routes.putAll(RouteRegistry.routes());
         }
 }

@@ -15,6 +15,8 @@ public class RouteRegistry {
 
         Map<RouteKey, Controller> routes = new HashMap<>();
 
+        routes.put(RouteKey.of("GET", "/health"), new HealthController());
+
         routes.put(RouteKey.of("POST", "/availability"), new AvailabilityController());
         routes.put(RouteKey.of("POST", "/reserve"), new ReservationController());
 
