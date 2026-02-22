@@ -1,5 +1,7 @@
 package org.sachith.dto;
 
+import java.util.List;
+
 public class ReservationRequest {
 
     private String origin;
@@ -11,6 +13,9 @@ public class ReservationRequest {
     private int paymentAmount;
 
     private String travelDate;
+
+    // Optional: list of seat numbers requested by client
+    private List<String> seats;
 
     public String getOrigin() {
         return origin;
@@ -50,5 +55,13 @@ public class ReservationRequest {
 
     public void setTravelDate(String travelDate) {
         this.travelDate = travelDate;
+    }
+
+    public List<String> getSeats() {
+        return seats;
+    }
+
+    public void setSeats(List<String> seats) {
+        this.seats = seats;
     }
 }

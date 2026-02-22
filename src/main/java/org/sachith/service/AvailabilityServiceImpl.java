@@ -46,11 +46,7 @@ public class AvailabilityServiceImpl implements AvailabilityService {
         for (Seat seat : trip.getSeats()) {
 
             if (seat.isAvailable(start, end, isForward)) {
-
                 availableSeats.add(seat.getSeatNumber());
-
-//                if (availableSeats.size() == passengers)
-//                    break;
             }
         }
 

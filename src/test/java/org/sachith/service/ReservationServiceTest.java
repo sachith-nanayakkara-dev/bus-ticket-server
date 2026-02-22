@@ -1,4 +1,3 @@
-
 package org.sachith.service;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -16,239 +15,255 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class ReservationServiceTest {
 
-    private ReservationService reservationService;
+        private ReservationService reservationService;
 
-    @BeforeEach
-    void setup() {
+        @BeforeEach
+        void setup() {
 
-        // Reset in-memory state before each test
-        TripRepositoryImpl.clear();
+                // Reset in-memory state before each test
+                TripRepositoryImpl.clear();
 
-        reservationService =
-                new ReservationServiceImpl();
-    }
+                reservationService = new ReservationServiceImpl();
+        }
 
-    /**
-     * Test successful forward reservation
-     */
-    @Test
-    void shouldReserveSeatsForwardSuccessfully() {
+        /**
+         * Test successful forward reservation
+         */
+        @Test
+        void shouldReserveSeatsForwardSuccessfully() {
 
-        ReservationResponse response =
+                ReservationResponse response = reservationService.reserve(
+                                "A",
+                                "C",
+                                2,
+                                200,
+                                "2026-03-10",
+                                null);
+
+                assertNotNull(response);
+
+                assertEquals(2,
+                                response.getSeats().size());
+
+                assertEquals("A",
+                                response.getJourneyInfo().getOrigin());
+
+                assertEquals("C",
+                                response.getJourneyInfo().getDestination());
+
+                assertEquals(200,
+                                response.getTotalPrice());
+        }
+
+        /**
+         * Test successful return reservation
+         */
+        @Test
+        void shouldReserveSeatsReturnSuccessfully() {
+
+                ReservationResponse response = reservationService.reserve(
+                                "D",
+                                "B",
+                                3,
+                                300,
+                                "2026-03-10",
+                                null);
+
+                assertNotNull(response);
+
+                assertEquals(3,
+                                response.getSeats().size());
+
+                assertEquals("D",
+                                response.getJourneyInfo().getOrigin());
+
+                assertEquals("B",
+                                response.getJourneyInfo().getDestination());
+        }
+
+        /**
+         * Test invalid payment rejection
+         */
+        @Test
+        void shouldThrowInvalidPaymentException() {
+
+                assertThrows(
+                                InvalidPaymentException.class,
+                                () -> reservationService.reserve(
+                                                "A",
+                                                "C",
+                                                2,
+                                                10,
+                                                "2026-03-10",
+                                                null));
+        }
+
+        /**
+         * Test seat not available when fully booked
+         */
+        @Test
+        void shouldThrowSeatNotAvailableExceptionWhenFull() {
+
+                // Book all seats
                 reservationService.reserve(
-                        "A",
-                        "C",
-                        2,
-                        200,
-                        "2026-03-10"
-                );
+                                "A",
+                                "D",
+                                40,
+                                6000,
+                                "2026-03-10",
+                                null);
 
-        assertNotNull(response);
+                assertThrows(
+                                SeatNotAvailableException.class,
+                                () -> reservationService.reserve(
+                                                "A",
+                                                "D",
+                                                1,
+                                                150,
+                                                "2026-03-10",
+                                                null));
+        }
 
-        assertEquals(2,
-                response.getSeats().size());
+        /**
+         * Test date isolation
+         */
+        @Test
+        void shouldAllowBookingOnDifferentDatesIndependently() {
 
-        assertEquals("A",
-                response.getJourneyInfo().getOrigin());
-
-        assertEquals("C",
-                response.getJourneyInfo().getDestination());
-
-        assertEquals(200,
-                response.getTotalPrice());
-    }
-
-    /**
-     * Test successful return reservation
-     */
-    @Test
-    void shouldReserveSeatsReturnSuccessfully() {
-
-        ReservationResponse response =
                 reservationService.reserve(
-                        "D",
-                        "B",
-                        3,
-                        300,
-                        "2026-03-10"
-                );
+                                "A",
+                                "D",
+                                40,
+                                6000,
+                                "2026-03-10",
+                                null);
 
-        assertNotNull(response);
+                // Next date should still allow booking
+                ReservationResponse response = reservationService.reserve(
+                                "A",
+                                "D",
+                                1,
+                                150,
+                                "2026-03-11",
+                                null);
 
-        assertEquals(3,
-                response.getSeats().size());
+                assertNotNull(response);
 
-        assertEquals("D",
-                response.getJourneyInfo().getOrigin());
+                assertEquals(1,
+                                response.getSeats().size());
+        }
 
-        assertEquals("B",
-                response.getJourneyInfo().getDestination());
-    }
+        /**
+         * Test concurrency safety
+         */
+        @Test
+        void shouldHandleConcurrentReservationsSafely()
+                        throws InterruptedException {
 
-    /**
-     * Test invalid payment rejection
-     */
-    @Test
-    void shouldThrowInvalidPaymentException() {
+                int threadCount = 25;
 
-        assertThrows(
-                InvalidPaymentException.class,
-                () -> reservationService.reserve(
-                        "A",
-                        "C",
-                        2,
-                        10,
-                        "2026-03-10"
-                )
-        );
-    }
+                ExecutorService executor = Executors.newFixedThreadPool(threadCount);
 
-    /**
-     * Test seat not available when fully booked
-     */
-    @Test
-    void shouldThrowSeatNotAvailableExceptionWhenFull() {
+                CountDownLatch latch = new CountDownLatch(threadCount);
 
-        // Book all seats
-        reservationService.reserve(
-                "A",
-                "D",
-                40,
-                6000,
-                "2026-03-10"
-        );
+                List<Future<Boolean>> futures = new ArrayList<>();
 
-        assertThrows(
-                SeatNotAvailableException.class,
-                () -> reservationService.reserve(
-                        "A",
-                        "D",
-                        1,
-                        150,
-                        "2026-03-10"
-                )
-        );
-    }
+                for (int i = 0; i < threadCount; i++) {
 
-    /**
-     * Test date isolation
-     */
-    @Test
-    void shouldAllowBookingOnDifferentDatesIndependently() {
+                        futures.add(
+                                        executor.submit(() -> {
 
-        reservationService.reserve(
-                "A",
-                "D",
-                40,
-                6000,
-                "2026-03-10"
-        );
+                                                try {
 
-        // Next date should still allow booking
-        ReservationResponse response =
-                reservationService.reserve(
-                        "A",
-                        "D",
-                        1,
-                        150,
-                        "2026-03-11"
-                );
+                                                        reservationService.reserve(
+                                                                        "A",
+                                                                        "D",
+                                                                        2,
+                                                                        300,
+                                                                        "2026-03-15",
+                                                                        null);
 
-        assertNotNull(response);
+                                                        return true;
 
-        assertEquals(1,
-                response.getSeats().size());
-    }
+                                                } catch (SeatNotAvailableException ex) {
 
-    /**
-     * Test concurrency safety
-     */
-    @Test
-    void shouldHandleConcurrentReservationsSafely()
-            throws InterruptedException {
+                                                        return false;
+                                                } finally {
 
-        int threadCount = 25;
+                                                        latch.countDown();
+                                                }
+                                        }));
+                }
 
-        ExecutorService executor =
-                Executors.newFixedThreadPool(threadCount);
+                latch.await();
 
-        CountDownLatch latch =
-                new CountDownLatch(threadCount);
+                executor.shutdown();
 
-        List<Future<Boolean>> futures =
-                new ArrayList<>();
+                int successCount = 0;
 
-        for (int i = 0; i < threadCount; i++) {
-
-            futures.add(
-                    executor.submit(() -> {
+                for (Future<Boolean> f : futures) {
 
                         try {
 
-                            reservationService.reserve(
-                                    "A",
-                                    "D",
-                                    2,
-                                    300,
-                                    "2026-03-15"
-                            );
+                                if (f.get())
+                                        successCount++;
 
-                            return true;
-
-                        } catch (SeatNotAvailableException ex) {
-
-                            return false;
-                        } finally {
-
-                            latch.countDown();
+                        } catch (Exception ignored) {
                         }
-                    })
-            );
+                }
+
+                // Max seats = 40, each request books 2 seats
+                // So max successful requests = 20
+
+                assertTrue(successCount <= 20);
         }
 
-        latch.await();
+        /**
+         * Test that booking A-C and then C-D returns the same seat for both
+         * reservations.
+         */
+        @Test
+        void shouldReturnSameSeatForNonOverlappingSegments() {
+                // Book A-C (segments 0,1)
+                ReservationResponse first = reservationService.reserve(
+                                "A", "C", 1, 100, "2026-03-20", null);
+                assertNotNull(first);
+                assertEquals(1, first.getSeats().size());
+                String seat = first.getSeats().get(0);
 
-        executor.shutdown();
+                // Book C-D (segment 2)
+                ReservationResponse second = reservationService.reserve(
+                                "C", "D", 1, 50, "2026-03-20", null);
+                assertNotNull(second);
+                assertEquals(1, second.getSeats().size());
+                String seat2 = second.getSeats().get(0);
 
-        int successCount = 0;
-
-        for (Future<Boolean> f : futures) {
-
-            try {
-
-                if (f.get()) successCount++;
-
-            } catch (Exception ignored) {}
+                // Should be the same seat
+                assertEquals(seat, seat2);
         }
 
-        // Max seats = 40, each request books 2 seats
-        // So max successful requests = 20
+        /**
+         * Test reservation with specified seat numbers.
+         */
+        @Test
+        void shouldReserveSpecifiedSeatsSuccessfully() {
+                List<String> seats = List.of("1A", "1B");
+                ReservationResponse response = reservationService.reserve(
+                                "A", "C", 2, 200, "2026-04-01", seats);
+                assertNotNull(response);
+                assertEquals(seats, response.getSeats());
+        }
 
-        assertTrue(successCount <= 20);
-    }
-
-    /**
-     * Test that booking A-C and then C-D returns the same seat for both reservations.
-     */
-    @Test
-    void shouldReturnSameSeatForNonOverlappingSegments() {
-        // Book A-C (segments 0,1)
-        ReservationResponse first = reservationService.reserve(
-                "A", "C", 1, 100, "2026-03-20"
-        );
-        assertNotNull(first);
-        assertEquals(1, first.getSeats().size());
-        String seat = first.getSeats().get(0);
-
-        // Book C-D (segment 2)
-        ReservationResponse second = reservationService.reserve(
-                "C", "D", 1, 50, "2026-03-20"
-        );
-        assertNotNull(second);
-        assertEquals(1, second.getSeats().size());
-        String seat2 = second.getSeats().get(0);
-
-        // Should be the same seat
-        assertEquals(seat, seat2);
-    }
+        /**
+         * Test reservation fails if specified seat is unavailable.
+         */
+        @Test
+        void shouldFailIfSpecifiedSeatUnavailable() {
+                List<String> seats = List.of("1A");
+                // First booking reserves 1A
+                reservationService.reserve("A", "C", 1, 100, "2026-04-02", seats);
+                // Second booking for overlapping segment should fail
+                assertThrows(SeatNotAvailableException.class,
+                                () -> reservationService.reserve("A", "D", 1, 150, "2026-04-02", seats));
+        }
 }

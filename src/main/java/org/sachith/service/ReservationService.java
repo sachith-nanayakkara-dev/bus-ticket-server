@@ -2,6 +2,7 @@
 package org.sachith.service;
 
 import org.sachith.dto.ReservationResponse;
+import java.util.List;
 
 /**
  * Service interface for reserving bus seats.
@@ -18,10 +19,11 @@ public interface ReservationService {
      * @param travelDate    Date of travel (yyyy-MM-dd)
      * @return ReservationResponse with reservation details
      */
-    public ReservationResponse reserve(
+        public ReservationResponse reserve(
             String origin,
             String destination,
             int passengers,
             int paymentAmount,
-            String travelDate);
+            String travelDate,
+            List<String> seats);
 }

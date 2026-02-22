@@ -57,7 +57,8 @@ public class ReservationConcurrencyTest {
                                             "D",
                                             1,
                                             150,
-                                            travelDate
+                                            travelDate,
+                                            null
                                     );
 
                             return response.getSeats();

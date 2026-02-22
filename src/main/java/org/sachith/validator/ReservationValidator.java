@@ -45,8 +45,23 @@ public class ReservationValidator {
 
         if (request.getTravelDate() == null ||
                 request.getTravelDate().isBlank()) {
-
             throw new ValidationException("travelDate is required");
+        }
+
+        // Validate seats if provided
+        if (request.getSeats() != null && !request.getSeats().isEmpty()) {
+            if (request.getSeats().size() != request.getPassengers()) {
+                throw new ValidationException("Number of seats must match passengers");
+            }
+            for (String seatNum : request.getSeats()) {
+                if (seatNum == null || seatNum.isBlank()) {
+                    throw new ValidationException("Seat number cannot be blank");
+                }
+                // Optionally: validate seat format (e.g., 1A, 10D)
+                if (!seatNum.matches("^(10|[1-9])[A-D]$")) {
+                    throw new ValidationException("Invalid seat number: " + seatNum);
+                }
+            }
         }
 
     }

@@ -16,117 +16,132 @@ import java.util.List;
 
 public class ReservationServiceImpl implements ReservationService {
 
-    private static final Logger log =
-            LoggerFactory.getLogger(ReservationServiceImpl.class);
+        private static final Logger log = LoggerFactory.getLogger(ReservationServiceImpl.class);
 
-    private final ReservationRepository reservationRepository =
-            new ReservationRepositoryImpl();
+        private final ReservationRepository reservationRepository = new ReservationRepositoryImpl();
 
-    private final ScheduleServiceImpl scheduleServiceImpl =
-            new ScheduleServiceImpl();
+        private final ScheduleServiceImpl scheduleServiceImpl = new ScheduleServiceImpl();
 
-    private final TripRepository tripRepository = new TripRepositoryImpl();
+        private final TripRepository tripRepository = new TripRepositoryImpl();
 
-    @Override
-    public synchronized ReservationResponse reserve(
-            String origin,
-            String destination,
-            int passengers,
-            int paymentAmount,
-            String travelDate) {
+        @Override
+        public synchronized ReservationResponse reserve(
+                        String origin,
+                        String destination,
+                        int passengers,
+                        int paymentAmount,
+                        String travelDate,
+                        List<String> seats) {
 
-        log.info("Reservation request received: origin={}, destination={}, passengers={}",
-                origin, destination, passengers);
+                log.info("Reservation request received: origin={}, destination={}, passengers={}",
+                                origin, destination, passengers);
 
-        int originIndex = index(origin);
-        int destinationIndex = index(destination);
+                int originIndex = index(origin);
+                int destinationIndex = index(destination);
 
-        boolean isForward =
-                originIndex < destinationIndex;
+                boolean isForward = originIndex < destinationIndex;
 
-        // 'start' is the lower index of the two locations (inclusive), marking the
-        // beginning segment of the journey.
-        int start = Math.min(originIndex, destinationIndex);
-        // 'end' is the higher index of the two locations (exclusive), marking the
-        // segment just after the journey ends.
-        int end = Math.max(originIndex, destinationIndex);
+                // 'start' is the lower index of the two locations (inclusive), marking the
+                // beginning segment of the journey.
+                int start = Math.min(originIndex, destinationIndex);
+                // 'end' is the higher index of the two locations (exclusive), marking the
+                // segment just after the journey ends.
+                int end = Math.max(originIndex, destinationIndex);
 
-        // calculate price per seat & expected total
-        int pricePerSeat = (end - start) * 50;
-        int expectedTotal = pricePerSeat * passengers;
+                // calculate price per seat & expected total
+                int pricePerSeat = (end - start) * 50;
+                int expectedTotal = pricePerSeat * passengers;
 
-        if (paymentAmount != expectedTotal) {
+                if (paymentAmount != expectedTotal) {
 
-            log.warn("Invalid payment amount: expected={}, actual={}",
-                    expectedTotal, paymentAmount);
+                        log.warn("Invalid payment amount: expected={}, actual={}",
+                                        expectedTotal, paymentAmount);
 
-            throw new InvalidPaymentException();
+                        throw new InvalidPaymentException();
+                }
+
+                List<String> bookedSeats = new ArrayList<>();
+                Trip trip = tripRepository.findOrCreate(travelDate, isForward);
+
+                if (seats != null && !seats.isEmpty()) {
+                        // Client requested specific seats
+                        for (String seatNum : seats) {
+                                Seat seat = trip.getSeats().stream()
+                                                .filter(s -> s.getSeatNumber().equals(seatNum))
+                                                .findFirst()
+                                                .orElse(null);
+                                if (seat == null || !seat.isAvailable(start, end, isForward)) {
+                                        log.warn("Requested seat {} is not available for route {} → {}", seatNum,
+                                                        origin, destination);
+                                        throw new SeatNotAvailableException();
+                                }
+                        }
+                        // All requested seats are available, reserve them
+                        for (String seatNum : seats) {
+                                Seat seat = trip.getSeats().stream()
+                                                .filter(s -> s.getSeatNumber().equals(seatNum))
+                                                .findFirst()
+                                                .orElse(null);
+                                seat.reserve(start, end, isForward);
+                                bookedSeats.add(seatNum);
+                        }
+                        if (bookedSeats.size() != passengers) {
+                                log.warn("Number of requested seats does not match passengers for route {} → {}",
+                                                origin, destination);
+                                throw new SeatNotAvailableException();
+                        }
+                } else {
+                        // Auto-assign seats
+                        for (Seat seat : trip.getSeats()) {
+                                if (seat.isAvailable(start, end, isForward)) {
+                                        seat.reserve(start, end, isForward);
+                                        bookedSeats.add(seat.getSeatNumber());
+                                        if (bookedSeats.size() == passengers)
+                                                break;
+                                }
+                        }
+                        if (bookedSeats.size() != passengers) {
+                                log.warn("Not enough seats available for route {} → {}", origin, destination);
+                                throw new SeatNotAvailableException();
+                        }
+                }
+
+                // Generate reservation ID
+                String reservationId = reservationRepository.generateReservationId(origin, destination);
+
+                // Create Reservation domain object
+                Reservation reservation = new Reservation();
+
+                reservation.setReservationId(reservationId);
+                reservation.setOrigin(origin);
+                reservation.setDestination(destination);
+                reservation.setSeats(bookedSeats);
+                reservation.setTotalPrice(expectedTotal);
+
+                // Save using repository
+                reservationRepository.save(reservation);
+
+                log.info("Reservation successful: reservationId={}, seats={}",
+                                reservationId, bookedSeats);
+                JourneyInfo journeyInfo = scheduleServiceImpl.calculateJourney(origin, destination);
+
+                return new ReservationResponse(
+                                reservationId,
+                                bookedSeats,
+                                journeyInfo,
+                                expectedTotal,
+                                travelDate);
         }
 
-        List<String> bookedSeats = new ArrayList<>();
+        private int index(String location) {
 
-        Trip trip =
-                tripRepository.findOrCreate(travelDate, isForward);
+                return switch (location) {
 
-        for (Seat seat : trip.getSeats()) {
-
-            if (seat.isAvailable(start, end, isForward)) {
-
-                seat.reserve(start, end, isForward);
-
-                bookedSeats.add(seat.getSeatNumber());
-
-                if (bookedSeats.size() == passengers)
-                    break;
-            }
+                        case "A" -> 0;
+                        case "B" -> 1;
+                        case "C" -> 2;
+                        case "D" -> 3;
+                        default -> throw new IllegalArgumentException("Invalid location: " + location);
+                };
         }
-
-        if (bookedSeats.size() != passengers) {
-
-            log.warn("Not enough seats available for route {} → {}", origin, destination);
-
-            throw new SeatNotAvailableException();
-        }
-
-        // Generate reservation ID
-        String reservationId =
-                reservationRepository.generateReservationId(origin, destination);
-
-        // Create Reservation domain object
-        Reservation reservation = new Reservation();
-
-        reservation.setReservationId(reservationId);
-        reservation.setOrigin(origin);
-        reservation.setDestination(destination);
-        reservation.setSeats(bookedSeats);
-        reservation.setTotalPrice(expectedTotal);
-
-        // Save using repository
-        reservationRepository.save(reservation);
-
-        log.info("Reservation successful: reservationId={}, seats={}",
-                reservationId, bookedSeats);
-        JourneyInfo journeyInfo =
-                scheduleServiceImpl.calculateJourney(origin, destination);
-
-        return new ReservationResponse(
-                reservationId,
-                bookedSeats,
-                journeyInfo,
-                expectedTotal,
-                travelDate
-        );
-    }
-
-    private int index(String location) {
-
-        return switch (location) {
-
-            case "A" -> 0;
-            case "B" -> 1;
-            case "C" -> 2;
-            case "D" -> 3;
-            default -> throw new IllegalArgumentException("Invalid location: " + location);
-        };
-    }
 }

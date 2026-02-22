@@ -92,7 +92,8 @@ public class AvailabilityServiceTest {
                 "D",
                 40,
                 6000,
-                "2026-03-01"
+                "2026-03-01",
+                null
         );
 
         // Date 1: now should have 0 seats available for A -> D

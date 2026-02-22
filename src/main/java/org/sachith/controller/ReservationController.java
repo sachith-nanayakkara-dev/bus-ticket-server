@@ -25,8 +25,8 @@ public class ReservationController implements Controller {
         ReservationRequest req = ctx.readBody(ReservationRequest.class);
         ReservationValidator.validate(req);
         ReservationResponse res = service.reserve(
-                req.getOrigin(), req.getDestination(), req.getPassengers(), req.getPaymentAmount(),
-                req.getTravelDate());
+            req.getOrigin(), req.getDestination(), req.getPassengers(), req.getPaymentAmount(),
+            req.getTravelDate(), req.getSeats());
         ctx.writeJson(200, res);
     }
 }
