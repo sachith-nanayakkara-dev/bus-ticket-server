@@ -34,7 +34,7 @@ public class AvailabilityServiceTest {
 
         assertNotNull(response);
 
-        assertEquals(2,
+        assertEquals(40,
                 response.getAvailableSeats().size());
 
         assertEquals(100,
@@ -61,7 +61,7 @@ public class AvailabilityServiceTest {
 
         assertNotNull(response);
 
-        assertEquals(3,
+        assertEquals(40,
                 response.getAvailableSeats().size());
 
         assertEquals(100,

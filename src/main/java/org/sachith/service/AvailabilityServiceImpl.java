@@ -49,13 +49,12 @@ public class AvailabilityServiceImpl implements AvailabilityService {
 
                 availableSeats.add(seat.getSeatNumber());
 
-                if (availableSeats.size() == passengers)
-                    break;
+//                if (availableSeats.size() == passengers)
+//                    break;
             }
         }
 
         int pricePerSeat = (end - start) * 50;
-
         int totalPrice = pricePerSeat * passengers;
 
         return new AvailabilityResponse(

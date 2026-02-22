@@ -167,7 +167,7 @@ public class ReservationServiceTest {
     void shouldHandleConcurrentReservationsSafely()
             throws InterruptedException {
 
-        int threadCount = 20;
+        int threadCount = 25;
 
         ExecutorService executor =
                 Executors.newFixedThreadPool(threadCount);
