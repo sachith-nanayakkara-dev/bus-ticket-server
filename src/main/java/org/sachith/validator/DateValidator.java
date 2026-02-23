@@ -31,7 +31,7 @@ public class DateValidator {
         } catch (Exception ex) {
 
             throw new ValidationException(
-                    "Invalid travelDate. Expected format yyyy-MM-dd");
+                    "Invalid travelDate");
         }
     }
 }

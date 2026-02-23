@@ -3,6 +3,7 @@ package org.sachith.service;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.sachith.dto.AvailabilityResponse;
+import org.sachith.exception.SeatNotAvailableException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -96,14 +97,15 @@ public class AvailabilityServiceTest {
                 null
         );
 
-        // Date 1: now should have 0 seats available for A -> D
-        AvailabilityResponse date1AfterBooking =
+        // Date 1: now should throw exception for A -> D (all seats booked)
+        assertThrows(SeatNotAvailableException.class, () ->
                 availabilityService.checkAvailability(
                         "A",
                         "D",
                         40,
                         "2026-03-01"
-                );
+                )
+        );
 
         // Date 2: should still have 40 seats available
         AvailabilityResponse date2 =
@@ -113,8 +115,6 @@ public class AvailabilityServiceTest {
                         40,
                         "2026-03-02"
                 );
-
-        assertEquals(0, date1AfterBooking.getAvailableSeats().size());
         assertEquals(40, date2.getAvailableSeats().size());
     }
 

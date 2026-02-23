@@ -71,9 +71,9 @@ public class ReservationServiceImpl implements ReservationService {
                                                 .findFirst()
                                                 .orElse(null);
                                 if (seat == null || !seat.isAvailable(start, end, isForward)) {
-                                        log.warn("Requested seat {} is not available for route {} → {}", seatNum,
-                                                        origin, destination);
-                                        throw new SeatNotAvailableException();
+                                        String msg = String.format("Requested seat %s is not available for route %s → %s", seatNum, origin, destination);
+                                        log.warn(msg);
+                                        throw new SeatNotAvailableException(msg);
                                 }
                         }
                         // All requested seats are available, reserve them
@@ -86,23 +86,29 @@ public class ReservationServiceImpl implements ReservationService {
                                 bookedSeats.add(seatNum);
                         }
                         if (bookedSeats.size() != passengers) {
-                                log.warn("Number of requested seats does not match passengers for route {} → {}",
-                                                origin, destination);
-                                throw new SeatNotAvailableException();
+                                String msg = String.format("Number of requested seats does not match passengers for route %s → %s", origin, destination);
+                                log.warn(msg);
+                                throw new SeatNotAvailableException(msg);
                         }
                 } else {
-                        // Auto-assign seats
+                        // Auto-assign seats: atomic reservation
+                        List<Seat> availableSeats = new ArrayList<>();
                         for (Seat seat : trip.getSeats()) {
                                 if (seat.isAvailable(start, end, isForward)) {
-                                        seat.reserve(start, end, isForward);
-                                        bookedSeats.add(seat.getSeatNumber());
-                                        if (bookedSeats.size() == passengers)
+                                        availableSeats.add(seat);
+                                        if (availableSeats.size() == passengers)
                                                 break;
                                 }
                         }
-                        if (bookedSeats.size() != passengers) {
-                                log.warn("Not enough seats available for route {} → {}", origin, destination);
-                                throw new SeatNotAvailableException();
+                        if (availableSeats.size() != passengers) {
+                                String msg = String.format("Not enough seats available for route %s → %s", origin, destination);
+                                log.warn(msg);
+                                throw new SeatNotAvailableException(msg);
+                        }
+                        // Now reserve all seats
+                        for (Seat seat : availableSeats) {
+                                seat.reserve(start, end, isForward);
+                                bookedSeats.add(seat.getSeatNumber());
                         }
                 }
 

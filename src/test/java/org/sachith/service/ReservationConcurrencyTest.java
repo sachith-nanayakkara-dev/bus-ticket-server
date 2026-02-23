@@ -3,6 +3,7 @@ package org.sachith.service;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.sachith.dto.ReservationResponse;
+import org.sachith.exception.SeatNotAvailableException;
 import org.sachith.repository.TripRepositoryImpl;
 
 import java.util.ArrayList;
@@ -92,17 +93,28 @@ public class ReservationConcurrencyTest {
         assertTrue(totalBookedSeats <= 40);
 
         // Verify availability matches expected remaining seats
-        var availability =
+        if (totalBookedSeats == 40) {
+            // All seats booked, should throw exception
+            assertThrows(SeatNotAvailableException.class, () ->
                 availabilityService.checkAvailability(
-                        "A",
-                        "D",
-                        40,
-                        travelDate
+                    "A",
+                    "D",
+                    40,
+                    travelDate
+                )
+            );
+        } else {
+            var availability =
+                availabilityService.checkAvailability(
+                    "A",
+                    "D",
+                    40,
+                    travelDate
                 );
-
-        assertEquals(
+            assertEquals(
                 40 - totalBookedSeats,
                 availability.getAvailableSeats().size()
-        );
+            );
+        }
     }
 }

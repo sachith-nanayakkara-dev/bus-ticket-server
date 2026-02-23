@@ -10,19 +10,14 @@ public class AvailabilityResponse {
 
     private int totalPrice;
 
-    private String travelDate;
 
     public AvailabilityResponse(
             List<String> availableSeats,
             int pricePerSeat,
-            int totalPrice,
-            String travelDate) {
-
+            int totalPrice) {
         this.availableSeats = availableSeats;
         this.pricePerSeat = pricePerSeat;
         this.totalPrice = totalPrice;
-        this.travelDate = travelDate;
-
     }
 
     public List<String> getAvailableSeats() {
@@ -37,7 +32,4 @@ public class AvailabilityResponse {
         return totalPrice;
     }
 
-    public String getTravelDate() {
-        return travelDate;
-    }
 }

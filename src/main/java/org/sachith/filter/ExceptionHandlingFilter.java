@@ -48,6 +48,18 @@ public class ExceptionHandlingFilter implements Filter {
                                         mapper.writeValue(httpResponse.getOutputStream(), error);
                                         return;
                                 }
+                                // Handle JSON parsing errors
+                                if (cause instanceof com.fasterxml.jackson.databind.JsonMappingException ||
+                                                cause instanceof com.fasterxml.jackson.core.JsonParseException) {
+                                        log.warn("JSON parsing error: {} | Type: {}", cause.getMessage(),
+                                                        cause.getClass().getName());
+                                        httpResponse.setStatus(400);
+                                        httpResponse.setContentType("application/json");
+                                        ErrorResponse error = new ErrorResponse("INVALID_JSON",
+                                                        "Malformed or invalid JSON request body");
+                                        mapper.writeValue(httpResponse.getOutputStream(), error);
+                                        return;
+                                }
                                 cause = cause.getCause();
                         }
                         log.error("Unexpected exception occurred | Type: {}", ex.getClass().getName(), ex);

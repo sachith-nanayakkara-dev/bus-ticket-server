@@ -33,11 +33,6 @@ public class ReservationValidator {
                     "Passengers must be greater than 0");
         }
 
-        if (request.getPassengers() > 4) {
-            throw new ValidationException(
-                    "Maximum 4 passengers allowed per booking");
-        }
-
         if (request.getPaymentAmount() <= 0) {
             throw new ValidationException(
                     "Payment amount must be greater than 0");

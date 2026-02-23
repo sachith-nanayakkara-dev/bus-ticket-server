@@ -47,8 +47,8 @@ public class SimpleAvailabilityController implements Controller {
 
         // Validate allowed values for origin and destination
         String[] allowed = {"A", "B", "C", "D"};
-        boolean validOrigin = java.util.Arrays.asList(allowed).contains(origin.toUpperCase());
-        boolean validDestination = java.util.Arrays.asList(allowed).contains(destination.toUpperCase());
+        boolean validOrigin = java.util.Arrays.asList(allowed).contains(origin);
+        boolean validDestination = java.util.Arrays.asList(allowed).contains(destination);
         if (!validOrigin || !validDestination) {
             ctx.writeJson(400, java.util.Map.of("error", "Origin and destination must be one of A, B, C, D"));
             return;
@@ -60,11 +60,16 @@ public class SimpleAvailabilityController implements Controller {
             return;
         }
 
-        // Validate travelDate format (yyyy-MM-dd)
+        // Validate travelDate format (yyyy-MM-dd) and not before today
+        java.time.LocalDate parsedDate;
         try {
-            java.time.LocalDate.parse(travelDate);
+            parsedDate = java.time.LocalDate.parse(travelDate);
         } catch (Exception e) {
             ctx.writeJson(400, java.util.Map.of("error", "Invalid travelDate format, expected yyyy-MM-dd"));
+            return;
+        }
+        if (parsedDate.isBefore(java.time.LocalDate.now())) {
+            ctx.writeJson(400, java.util.Map.of("error", "Travel date cannot be before today"));
             return;
         }
 
