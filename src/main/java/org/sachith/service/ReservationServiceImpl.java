@@ -1,5 +1,6 @@
 package org.sachith.service;
 
+import org.sachith.constants.PricingConstants;
 import org.sachith.dto.JourneyInfo;
 import org.sachith.dto.ReservationResponse;
 import org.sachith.exception.InvalidPaymentException;
@@ -8,6 +9,7 @@ import org.sachith.model.Reservation;
 import org.sachith.model.Seat;
 import org.sachith.model.Trip;
 import org.sachith.repository.*;
+import org.sachith.util.LocationUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,8 +38,8 @@ public class ReservationServiceImpl implements ReservationService {
                 log.info("Reservation request received: origin={}, destination={}, passengers={}",
                                 origin, destination, passengers);
 
-                int originIndex = index(origin);
-                int destinationIndex = index(destination);
+                int originIndex = LocationUtils.index(origin);
+                int destinationIndex = LocationUtils.index(destination);
 
                 boolean isForward = originIndex < destinationIndex;
 
@@ -49,7 +51,7 @@ public class ReservationServiceImpl implements ReservationService {
                 int end = Math.max(originIndex, destinationIndex);
 
                 // calculate price per seat & expected total
-                int pricePerSeat = (end - start) * 50;
+                int pricePerSeat = (end - start) * PricingConstants.PRICE_PER_SEGMENT;
                 int expectedTotal = pricePerSeat * passengers;
 
                 if (paymentAmount != expectedTotal) {
@@ -71,7 +73,9 @@ public class ReservationServiceImpl implements ReservationService {
                                                 .findFirst()
                                                 .orElse(null);
                                 if (seat == null || !seat.isAvailable(start, end, isForward)) {
-                                        String msg = String.format("Requested seat %s is not available for route %s → %s", seatNum, origin, destination);
+                                        String msg = String.format(
+                                                        "Requested seat %s is not available for route %s → %s", seatNum,
+                                                        origin, destination);
                                         log.warn(msg);
                                         throw new SeatNotAvailableException(msg);
                                 }
@@ -86,7 +90,9 @@ public class ReservationServiceImpl implements ReservationService {
                                 bookedSeats.add(seatNum);
                         }
                         if (bookedSeats.size() != passengers) {
-                                String msg = String.format("Number of requested seats does not match passengers for route %s → %s", origin, destination);
+                                String msg = String.format(
+                                                "Number of requested seats does not match passengers for route %s → %s",
+                                                origin, destination);
                                 log.warn(msg);
                                 throw new SeatNotAvailableException(msg);
                         }
@@ -101,7 +107,8 @@ public class ReservationServiceImpl implements ReservationService {
                                 }
                         }
                         if (availableSeats.size() != passengers) {
-                                String msg = String.format("Not enough seats available for route %s → %s", origin, destination);
+                                String msg = String.format("Not enough seats available for route %s → %s", origin,
+                                                destination);
                                 log.warn(msg);
                                 throw new SeatNotAvailableException(msg);
                         }
@@ -139,15 +146,4 @@ public class ReservationServiceImpl implements ReservationService {
                                 travelDate);
         }
 
-        private int index(String location) {
-
-                return switch (location) {
-
-                        case "A" -> 0;
-                        case "B" -> 1;
-                        case "C" -> 2;
-                        case "D" -> 3;
-                        default -> throw new IllegalArgumentException("Invalid location: " + location);
-                };
-        }
 }

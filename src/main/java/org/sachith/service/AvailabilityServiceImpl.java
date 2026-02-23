@@ -6,6 +6,8 @@ import org.sachith.model.Seat;
 import org.sachith.model.Trip;
 import org.sachith.repository.TripRepository;
 import org.sachith.repository.TripRepositoryImpl;
+import org.sachith.util.LocationUtils;
+import org.sachith.constants.PricingConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,8 +30,8 @@ public class AvailabilityServiceImpl implements AvailabilityService {
         log.info("Checking availability: origin={}, destination={}, passengers={}, travelDate={}",
                 origin, destination, passengers, travelDate);
 
-        int originIndex = index(origin);
-        int destinationIndex = index(destination);
+        int originIndex = LocationUtils.index(origin);
+        int destinationIndex = LocationUtils.index(destination);
 
         boolean isForward = originIndex < destinationIndex;
 
@@ -52,7 +54,7 @@ public class AvailabilityServiceImpl implements AvailabilityService {
                     "Not enough seats available for the requested number of passengers");
         }
 
-        int pricePerSeat = (end - start) * 50;
+        int pricePerSeat = (end - start) * PricingConstants.PRICE_PER_SEGMENT;
         int totalPrice = pricePerSeat * passengers;
 
         return new AvailabilityResponse(
@@ -61,15 +63,4 @@ public class AvailabilityServiceImpl implements AvailabilityService {
                 totalPrice);
     }
 
-    private int index(String location) {
-
-        return switch (location) {
-
-            case "A" -> 0;
-            case "B" -> 1;
-            case "C" -> 2;
-            case "D" -> 3;
-            default -> throw new RuntimeException("Invalid location");
-        };
-    }
 }
