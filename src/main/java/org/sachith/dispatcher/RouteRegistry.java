@@ -20,7 +20,7 @@ public class RouteRegistry {
         routes.put(RouteKey.of("POST", "/availability"), new AvailabilityController());
         routes.put(RouteKey.of("POST", "/reserve"), new ReservationController());
 
-        routes.put(RouteKey.of("GET", "/seat-map/grid"), new SeatGridMapController());
+        routes.put(RouteKey.of("GET", "/availability"), new SimpleAvailabilityController());
 
         return routes;
     }
